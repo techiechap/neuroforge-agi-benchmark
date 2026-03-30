@@ -1,0 +1,27 @@
+__pycache__/
+*.pyc
+.ipynb_checkpoints/
+.env
+wandb/
+
+# Logs (keep empty structure)
+logs/*
+!logs/.gitkeep
+
+# Models (don't push heavy files)
+models/*
+!models/.gitkeep
+
+# Data (keep structure only)
+data/*
+!data/.gitkeep
+
+# Artifacts (IMPORTANT: allow runs)
+artifacts/*
+!artifacts/.gitkeep
+!artifacts/runs/
+!artifacts/runs/*.json
+
+# Submissions
+submissions/*
+!submissions/.gitkeep

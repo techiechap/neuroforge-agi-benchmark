@@ -1,0 +1,26 @@
+{
+  "taskVersion": {
+    "versionNumber": 1,
+    "name": "spatial_inhibition_v1",
+    "description": "Tests if the model can move objects while ignoring distractor values.",
+    "definition": "@kbench.task(\n    name=\"spatial_inhibition_v1\",\n    description=\"Tests if the model can move objects while ignoring distractor values.\",\n    version=1\n)\ndef spatial_inhibition_task(llm):\n    # 1. Generate dynamic grid\n    size = random.randint(3, 5)\n    grid = [[0 for _ in range(size)] for _ in range(size)]\n\n    # Place target '1' so it can always move right\n    start_row = random.randint(0, size - 1)\n    start_col = random.randint(0, size - 2)\n    grid[start_row][start_col] = 1\n\n    # Place distractor '2' safely\n    while True:\n        d_row, d_col = random.randint(0, size-1), random.randint(0, size-1)\n        if (d_row, d_col) not in [(start_row, start_col), (start_row, start_col + 1)]:\n            grid[d_row][d_col] = 2\n            break\n\n    # 2. Calculate Truth\n    expected_grid = solver.move_right(grid, target_value=1)\n    expected_str = str(expected_grid)\n\n    # 3. Prompt\n    prompt = (\n        f\"Input Grid: {grid}\\n\"\n        \"Task: Find the value 1 and move it one column to the right. \"\n        \"Leave all other values exactly where they are. Output only the grid.\"\n    )\n\n    # 4. Execute & Parse\n    response = llm.prompt(prompt)\n    got_grid = parse_grid_robust(response)\n    got_str = str(got_grid) if got_grid else \"None\"\n\n    # 5. Diagnostic Logging\n    is_correct = (expected_str == got_str)\n    if not is_correct:\n        reason = classify_failure(expected_grid, got_grid)\n        print(f\"\u274c FAILURE [{reason}]\")\n        print(f\"   Input:    {grid}\")\n        print(f\"   Expected: {expected_str}\")\n        print(f\"   Got:      {got_str}\")\n    else:\n        print(f\"\u2705 SUCCESS\")\n\n    return is_correct\n"
+  },
+  "modelVersion": {},
+  "state": "BENCHMARK_TASK_RUN_STATE_COMPLETED",
+  "startTime": "2026-03-30T00:22:04.986542Z",
+  "endTime": "2026-03-30T00:22:06.058651Z",
+  "conversations": [
+    {
+      "id": "spatial_inhibition_v1-41f1817d",
+      "metrics": {},
+      "modelVersionSlug": "model_version_slug for conversation is DEPRECATED"
+    }
+  ],
+  "results": [
+    {
+      "type": "AGGREGATED",
+      "booleanResult": false
+    }
+  ],
+  "pyRunId": "spatial_inhibition_v1-Run #2"
+}
