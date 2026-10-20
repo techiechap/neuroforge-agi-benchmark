@@ -43,47 +43,20 @@ def classify_failure(expected, got):
     version=1
 )
 def spatial_inhibition_task(llm):
-    # 1. Generate dynamic grid
-    size = random.randint(3, 5)
-    grid = [[0 for _ in range(size)] for _ in range(size)]
+    import os
+    import json
+    from src.benchmark_quality import make_case, parse_grid
 
-    # Place target '1' so it can always move right
-    start_row = random.randint(0, size - 1)
-    start_col = random.randint(0, size - 2)
-    grid[start_row][start_col] = 1
-
-    # Place distractor '2' safely
-    while True:
-        d_row, d_col = random.randint(0, size-1), random.randint(0, size-1)
-        if (d_row, d_col) not in [(start_row, start_col), (start_row, start_col + 1)]:
-            grid[d_row][d_col] = 2
-            break
-
-    # 2. Calculate Truth
-    expected_grid = solver.move_right(grid, target_value=1)
-    expected_str = str(expected_grid)
-
-    # 3. Prompt
-    prompt = (
-        f"Input Grid: {grid}\n"
-        "Task: Find the value 1 and move it one column to the right. "
-        "Leave all other values exactly where they are. Output only the grid."
-    )
-
-    # 4. Execute & Parse
+    seed = int(os.environ.get("NEUROFORGE_CASE_SEED", "0"))
+    grid, expected = make_case(seed)
+    prompt = (f"Input Grid: {grid}\n"
+              "Task: Find the value 1 and move it one column to the right. "
+              "Leave all other values exactly where they are. Output only the grid.")
     response = llm.prompt(prompt)
-    got_grid = parse_grid_robust(response)
-    got_str = str(got_grid) if got_grid else "None"
-
-    # 5. Diagnostic Logging
-    is_correct = (expected_str == got_str)
-    if not is_correct:
-        reason = classify_failure(expected_grid, got_grid)
-        print(f"❌ FAILURE [{reason}]")
-        print(f"   Input:    {grid}")
-        print(f"   Expected: {expected_str}")
-        print(f"   Got:      {got_str}")
-    else:
-        print(f"✅ SUCCESS")
-
-    return is_correct
+    got = parse_grid(response)
+    passed = got == expected
+    # Tiny non-sensitive reproducibility trace. No raw prompts, tokens, or generated code.
+    print("CASE_JSON=" + json.dumps({"seed": seed, "input": grid,
+                                    "expected": expected, "got": got,
+                                    "passed": passed}, separators=(",", ":")))
+    return passed
