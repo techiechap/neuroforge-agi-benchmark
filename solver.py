@@ -20,6 +20,7 @@ class ARCSolver:
         Executes synthesized code against training examples to verify logic 
         before applying it to the final test input.
         """
+        raise RuntimeError("Untrusted model-generated Python execution disabled pending OS-level sandbox")
         try:
             # Note: In a production benchmark, use a sandboxed subprocess.
             # For local validation, we assume the code is a string containing 'def transform'
